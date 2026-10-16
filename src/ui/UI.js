@@ -1,13 +1,13 @@
 const $ = (sel) => document.querySelector(sel);
 
-/** DOM layer: HUD, overlay screens and the settings panel. */
+/** DOM layer for in-game UI: HUD, pause/level/game-over overlays and toasts. */
 export class UI {
-  constructor(actions) {
+  constructor(actions, lobby) {
     this.actions = actions;
+    this.lobby = lobby;
     this.overlay = $("#overlay");
     this.panel = $("#overlay .panel");
     this.hud = $("#hud");
-    this.settings = $("#settings");
     this.status = $("#status");
     this.hudEls = {
       level: $("#hud-level"),
@@ -17,16 +17,6 @@ export class UI {
       count: $("#hud-count"),
     };
     $("#pause-btn").addEventListener("click", () => actions.pause());
-    $("#settings-close").addEventListener("click", () => this.closeSettings());
-    $("#bg-upload").addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (file) actions.uploadBackground(file);
-      e.target.value = "";
-    });
-    for (const input of document.querySelectorAll('input[name="camera"]')) {
-      input.addEventListener("change", () => actions.setCamera(input.value));
-    }
-    $("#sound-toggle").addEventListener("change", (e) => actions.setMuted(!e.target.checked));
   }
 
   render(html, buttons) {
@@ -52,28 +42,19 @@ export class UI {
     this.hud.hidden = !playing;
   }
 
-  showMenu(highScore) {
-    this.render(
-      `<h1>מחץ את הג'וק</h1>
-       <p class="lead">ג'וקים נכנסים מכל הכיוונים — מחצו אותם לפני שנגמר הזמן!</p>
-       <ul class="how">
-         <li>🖱️ קליק / 👆 נגיעה על הג'וק</li>
-         <li>✋➜✊ מצלמה קדמית: יד פתוחה שנסגרת לאגרוף מעל הג'וק</li>
-         <li>📷 מצלמה אחורית: הג'וקים רצים על הרצפה האמיתית שלך</li>
-       </ul>
-       ${highScore ? `<p class="record">🏆 שיא: ${highScore}</p>` : ""}`,
-      [
-        ["▶ התחל", () => this.actions.start(), "primary"],
-        ["⚙ הגדרות", () => this.openSettings()],
-      ],
-    );
+  showLobby(highScore) {
+    this.hideOverlay();
+    this.lobby.show(highScore);
+  }
+
+  hideLobby() {
+    this.lobby.hide();
   }
 
   showPaused() {
     this.render(`<h2>הפסקה</h2>`, [
       ["▶ המשך", () => this.actions.resume(), "primary"],
-      ["⚙ הגדרות", () => this.openSettings()],
-      ["🏠 תפריט", () => this.actions.menu()],
+      ["⚙ חזרה לאפשרויות", () => this.actions.lobby()],
     ]);
   }
 
@@ -93,8 +74,8 @@ export class UI {
        <p class="big">${score}</p>
        <p>שיא: ${highScore}</p>`,
       [
-        ["↻ שוב", () => this.actions.start(), "primary"],
-        ["🏠 תפריט", () => this.actions.menu()],
+        ["↻ שוב", () => this.actions.restart(), "primary"],
+        ["⚙ שינוי אפשרויות", () => this.actions.lobby()],
       ],
     );
   }
@@ -110,42 +91,14 @@ export class UI {
     this.hudEls.progress.style.width = `${Math.min(100, (level.squashed / level.config.target) * 100)}%`;
   }
 
-  openSettings() {
-    this.settings.hidden = false;
-  }
-
-  closeSettings() {
-    this.settings.hidden = true;
-  }
-
-  renderBackgrounds(items, selectedId, onSelect) {
-    const grid = $("#bg-grid");
-    grid.innerHTML = "";
-    for (const { id, label, thumb } of items) {
-      const b = document.createElement("button");
-      b.className = "bg-option" + (id === selectedId ? " selected" : "");
-      b.style.backgroundImage = `url(${thumb})`;
-      b.innerHTML = `<span>${label}</span>`;
-      b.addEventListener("click", () => onSelect(id));
-      grid.append(b);
-    }
-  }
-
-  setCameraOption(value) {
-    const input = document.querySelector(`input[name="camera"][value="${value}"]`);
-    if (input) input.checked = true;
-  }
-
-  setCameraAvailable(available) {
-    for (const input of document.querySelectorAll('input[name="camera"]')) {
-      if (input.value !== "off") input.disabled = !available;
-    }
-  }
-
   toast(message, ms = 3500) {
     this.status.textContent = message;
     this.status.hidden = false;
     clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => (this.status.hidden = true), ms);
+    if (ms) this.toastTimer = setTimeout(() => (this.status.hidden = true), ms);
+  }
+
+  hideToast() {
+    this.status.hidden = true;
   }
 }

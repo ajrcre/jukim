@@ -31,6 +31,12 @@ export class World {
     this.bus.emit("spawn", roach);
   }
 
+  spawnFromMouth(mouth, config) {
+    const roach = this.factory.spawnFromMouth(mouth, config);
+    this.roaches.push(roach);
+    this.bus.emit("spawn", roach);
+  }
+
   update(dt, threats) {
     const world = { width: this.width, height: this.height, threats };
     for (const r of this.roaches) r.update(dt, world);
@@ -46,7 +52,7 @@ export class World {
     const hit = this.roaches.filter((r) => r.hitTest(x, y, radius));
     for (const r of hit) {
       r.dead = true;
-      this.splats.push(new Splat(r, this.dpr));
+      this.splats.push(new Splat(r, this.renderer));
     }
     if (this.splats.length > MAX_SPLATS) this.splats.splice(0, this.splats.length - MAX_SPLATS);
     if (!hit.length) this.effects.push(new MissMark(x, y, radius + 10));
@@ -68,26 +74,9 @@ export class World {
     return a;
   }
 
-  draw(ctx, time, cursors) {
+  draw(ctx, time) {
     for (const s of this.splats) s.draw(ctx);
     for (const r of this.roaches) this.renderer.draw(ctx, r, time);
     for (const e of this.effects) e.draw(ctx);
-    for (const c of cursors) drawHandCursor(ctx, c);
   }
-}
-
-function drawHandCursor(ctx, { x, y, closed }) {
-  ctx.save();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = closed ? "#ff5a3c" : "rgba(255,255,255,0.9)";
-  ctx.fillStyle = closed ? "rgba(255,90,60,0.25)" : "rgba(255,255,255,0.12)";
-  ctx.beginPath();
-  ctx.arc(x, y, closed ? 30 : 42, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.font = "28px system-ui";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(closed ? "✊" : "✋", x, y);
-  ctx.restore();
 }

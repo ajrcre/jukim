@@ -70,4 +70,12 @@ export class RoachFactory {
     const heading = Math.atan2(ty - y, tx - x);
     return new Roach({ type, x, y, heading, speedMul: speedMul * Math.sqrt(sizeMul), sizeMul, entry: { x: tx, y: ty } });
   }
+
+  /** A roach squeezing out of a mouth: sized to the mouth, crawling down and out. */
+  spawnFromMouth(mouth, { weights, speedMul }) {
+    const type = this.pickType(weights);
+    const sizeMul = Math.max(0.6, Math.min(1.8, mouth.width / 55));
+    const heading = Math.PI / 2 + rand(-1.2, 1.2);
+    return new Roach({ type, x: mouth.x, y: mouth.y, heading, speedMul, sizeMul, emerging: true });
+  }
 }

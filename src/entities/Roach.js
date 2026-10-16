@@ -7,7 +7,7 @@ let nextId = 1;
  * (wander / freeze / flee / leave). Rendering lives in RoachRenderer.
  */
 export class Roach {
-  constructor({ type, x, y, heading, speedMul = 1, sizeMul = 1, entry = null }) {
+  constructor({ type, x, y, heading, speedMul = 1, sizeMul = 1, entry = null, emerging = false }) {
     this.id = nextId++;
     this.type = type;
     this.x = x;
@@ -25,13 +25,21 @@ export class Roach {
     this.lifetime = rand(7, 14);
     this.state = "wander";
     this.stateTimer = 0;
-    this.entered = false;
+    this.entered = emerging;
+    // 0..1 progress of squeezing out of a mouth; 1 = fully out.
+    this.emerge = emerging ? 0 : 1;
     this.dead = false;
     this.gone = false;
   }
 
   get fleeing() {
     return this.state === "flee";
+  }
+
+  /** Visual scale while emerging (starts small, grows to full size). */
+  get renderScale() {
+    const t = this.emerge;
+    return 0.35 + 0.65 * (1 - (1 - t) * (1 - t));
   }
 
   /** Is the point (with extra tolerance radius) on the roach's body? */
@@ -50,6 +58,7 @@ export class Roach {
   update(dt, world) {
     this.age += dt;
     this.stateTimer -= dt;
+    if (this.emerge < 1) this.emerge = Math.min(1, this.emerge + dt / 0.45);
 
     const threat = this.nearestThreat(world.threats);
     if (threat && threat.d < this.type.fleeRadius) {
@@ -88,7 +97,7 @@ export class Roach {
         break;
     }
 
-    if (this.entered && this.state !== "leave") desired = this.avoidEdges(desired, world);
+    if (this.entered && this.emerge >= 1 && this.state !== "leave") desired = this.avoidEdges(desired, world);
 
     const turnRate = this.state === "flee" ? 9 : 4;
     this.heading += clamp(angleDiff(this.heading, desired), -turnRate * dt, turnRate * dt);

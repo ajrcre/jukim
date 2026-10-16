@@ -10,9 +10,16 @@ class State {
   strike() {}
 }
 
-export class MenuState extends State {
+/** Cartoon intro; the world stays empty underneath. */
+export class SplashState extends State {}
+
+/** Pre-game options screen, with a few roaches wandering around behind it. */
+export class LobbyState extends State {
   enter() {
-    this.game.ui.showMenu(this.game.score.highScore);
+    this.game.ui.showLobby(this.game.score.highScore);
+  }
+  exit() {
+    this.game.ui.hideLobby();
   }
   update(dt) {
     // Some ambient roaches wander around the menu for atmosphere.
@@ -37,8 +44,7 @@ export class PlayingState extends State {
   update(dt, time) {
     const g = this.game;
     g.time += dt;
-    const spawns = g.level.update(dt, g.world.roaches.length);
-    for (let i = 0; i < spawns; i++) g.world.spawn(g.level.config);
+    g.spawner.update(dt, g);
     g.world.update(dt, g.input.threats());
     g.sound.setScurry(g.world.activity());
     g.ui.updateHud(g);

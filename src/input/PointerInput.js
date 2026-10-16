@@ -1,5 +1,5 @@
 /**
- * Strategy: mouse + touch via Pointer Events. Emits "strike" on press and
+ * Mouse + touch via Pointer Events. Emits "strike" on press and
  * keeps the hovering/touching pointers as threats that roaches flee from.
  */
 export class PointerInput {
@@ -53,9 +53,5 @@ export class PointerInput {
 
   threats() {
     return [...this.pointers.values()];
-  }
-
-  cursors() {
-    return [];
   }
 }

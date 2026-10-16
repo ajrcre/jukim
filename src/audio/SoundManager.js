@@ -8,6 +8,8 @@ const FILES = {
   scurry: "assets/sounds/scurry.mp3",
   levelup: "assets/sounds/levelup.mp3",
   gameover: "assets/sounds/gameover.mp3",
+  cartoon_scream: "assets/sounds/cartoon_scream.mp3",
+  slipper_whack: "assets/sounds/slipper_whack.mp3",
 };
 
 /**

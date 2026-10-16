@@ -1,5 +1,5 @@
 import { TAU, rand } from "../core/math.js";
-import { drawAntennae, drawBody, drawLeg, makeCanvas } from "./RoachRenderer.js";
+import { drawAntennae, drawLeg, makeCanvas } from "./RoachRenderer.js";
 
 const GOO = ["#e9dfb4", "#d8c98e", "#cdb87a"];
 const JUICE = "rgba(92,62,22,0.75)";
@@ -22,7 +22,7 @@ function blob(ctx, x, y, r, color, roughness = 0.35) {
 
 /** Squashed roach remains: pre-rendered goo + flattened body, with legs that twitch for a moment. */
 export class Splat {
-  constructor(roach, dpr = 1, { fadeStart = 15, fadeEnd = 20 } = {}) {
+  constructor(roach, renderer, { fadeStart = 15, fadeEnd = 20 } = {}) {
     this.x = roach.x;
     this.y = roach.y;
     this.heading = roach.heading + rand(-0.2, 0.2);
@@ -48,7 +48,7 @@ export class Splat {
         });
       }
     }
-    this.sprite = this.render(dpr);
+    this.sprite = this.render(renderer);
   }
 
   get done() {
@@ -59,8 +59,9 @@ export class Splat {
     this.age += dt;
   }
 
-  render(dpr) {
+  render(renderer) {
     const { L, W } = this;
+    const dpr = renderer.dpr;
     const size = L * 3.2;
     const canvas = makeCanvas(Math.ceil(size * dpr), Math.ceil(size * dpr));
     const c = canvas.getContext("2d");
@@ -91,7 +92,10 @@ export class Splat {
     // Flattened, darkened body.
     c.save();
     c.scale(1.12, 1.4);
-    drawBody(c, L, W, this.type.colors);
+    const body = renderer.bodySprite(this.type, L, W, this.heading);
+    const bw = body.w * body.scale;
+    const bh = body.h * body.scale;
+    c.drawImage(body.canvas, -bw / 2, -bh / 2, bw, bh);
     c.globalCompositeOperation = "source-atop";
     c.fillStyle = "rgba(25,10,0,0.35)";
     c.fillRect(-L, -L, L * 2, L * 2);

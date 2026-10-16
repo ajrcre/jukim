@@ -85,6 +85,17 @@ SOUNDS: tuple[SoundSpec, ...] = (
         0.4,
     ),
     SoundSpec(
+        "cartoon_scream",
+        "Funny high-pitched cartoon bug screaming in panic, squeaky comedic yelp, animated show style",
+        1.2,
+        0.5,
+    ),
+    SoundSpec(
+        "slipper_whack",
+        "Loud comedic flip-flop slipper whack on a tile floor, sharp rubber slap",
+        0.6,
+    ),
+    SoundSpec(
         "gameover",
         "Short descending cartoon game over trombone, comedic",
         1.8,

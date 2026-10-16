@@ -43,6 +43,7 @@ jobs:
         run: |
           mkdir _site
           cp -r index.html styles.css manifest.webmanifest sw.js icons src assets _site/
+          if [ -f splash-preview.html ]; then cp splash-preview.html _site/; fi
       - uses: actions/upload-pages-artifact@v3
       - id: deployment
         uses: actions/deploy-pages@v4

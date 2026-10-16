@@ -3,46 +3,94 @@ import assert from "node:assert/strict";
 
 import { angleDiff } from "../../src/core/math.js";
 import { EventBus } from "../../src/core/EventBus.js";
-import { FistDetector, opennessRatio, palmCenter } from "../../src/input/gesture.js";
+import { MouthDetector, MouthSpawnScheduler, coverMap, mouthCenter, mouthOpenness } from "../../src/camera/mouth.js";
 import { Roach } from "../../src/entities/Roach.js";
 import { ROACH_TYPES, RoachFactory } from "../../src/entities/RoachFactory.js";
-import { tripodGroup } from "../../src/entities/RoachRenderer.js";
+import { RoachRenderer, tripodGroup } from "../../src/entities/RoachRenderer.js";
+import { bodyHeight, shadeBody } from "../../src/entities/RoachShader.js";
 import { LevelManager, levelConfig } from "../../src/game/LevelManager.js";
 import { ScoreManager } from "../../src/game/ScoreManager.js";
 
-// --- hand landmark fixtures -------------------------------------------------
-function hand(spread) {
-  // Wrist at (0.5, 0.8); MCPs ~0.15 above; tips `spread` further out.
-  const lm = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.8 }));
-  const xs = [0.44, 0.48, 0.52, 0.56];
-  [5, 9, 13, 17].forEach((i, k) => (lm[i] = { x: xs[k], y: 0.65 }));
-  [8, 12, 16, 20].forEach((i, k) => (lm[i] = { x: xs[k], y: 0.65 - spread }));
+// --- face landmark fixtures -------------------------------------------------
+function face(gap, cx = 0.5, cy = 0.6) {
+  const lm = Array.from({ length: 478 }, () => ({ x: cx, y: cy }));
+  lm[61] = { x: cx - 0.05, y: cy };
+  lm[291] = { x: cx + 0.05, y: cy };
+  lm[13] = { x: cx, y: cy - gap / 2 };
+  lm[14] = { x: cx, y: cy + gap / 2 };
   return lm;
 }
-const OPEN = hand(0.15);
-const FIST = hand(-0.02);
+const CLOSED = face(0.005);
+const OPEN = face(0.05);
 
-test("openness ratio separates open hand from fist", () => {
-  assert.ok(opennessRatio(OPEN) > 1.6);
-  assert.ok(opennessRatio(FIST) < 1.3);
+test("mouth openness separates open from closed", () => {
+  assert.ok(mouthOpenness(OPEN) > 0.32);
+  assert.ok(mouthOpenness(CLOSED) < 0.18);
+  assert.deepEqual(mouthCenter(OPEN), { x: 0.5, y: 0.6 });
 });
 
-test("palm center averages palm landmarks", () => {
-  const c = palmCenter(OPEN);
-  assert.ok(Math.abs(c.x - 0.5) < 0.01);
-  assert.ok(c.y > 0.65 && c.y < 0.8);
+test("mouth detector reports justOpened once, with hysteresis", () => {
+  const d = new MouthDetector();
+  assert.deepEqual(d.update(CLOSED), { open: false, justOpened: false });
+  assert.deepEqual(d.update(OPEN), { open: true, justOpened: true });
+  assert.deepEqual(d.update(OPEN), { open: true, justOpened: false });
+  assert.deepEqual(d.update(face(0.025)), { open: true, justOpened: false }, "between thresholds stays open");
+  assert.deepEqual(d.update(CLOSED), { open: false, justOpened: false });
 });
 
-test("fist detector fires once on open -> closed and respects cooldown", () => {
-  const d = new FistDetector({ cooldown: 0.3 });
-  assert.equal(d.update(FIST, 0), false, "fist without prior open hand does not fire");
-  assert.equal(d.update(OPEN, 0.1), false);
-  assert.equal(d.update(FIST, 0.2), true);
-  assert.equal(d.update(FIST, 0.25), false, "holding the fist does not refire");
-  assert.equal(d.update(OPEN, 0.3), false);
-  assert.equal(d.update(FIST, 0.35), false, "inside cooldown");
-  assert.equal(d.update(OPEN, 0.6), false);
-  assert.equal(d.update(FIST, 0.7), true);
+test("spawn scheduler bursts on open, trickles while open, stops when closed", () => {
+  const s = new MouthSpawnScheduler({ burst: [2, 2], interval: [1, 1] });
+  const m = (open, justOpened = false) => [{ id: 0, x: 10, y: 20, width: 50, open, justOpened }];
+  assert.equal(s.update(0.1, m(true, true)).length, 2);
+  assert.equal(s.update(0.5, m(true)).length, 0);
+  assert.equal(s.update(0.6, m(true)).length, 1);
+  assert.equal(s.update(5, m(false)).length, 0);
+  assert.equal(s.update(0.1, []).length, 0);
+});
+
+test("cover mapping mirrors and crops like object-fit: cover", () => {
+  const video = { width: 1280, height: 720 };
+  const screen = { width: 390, height: 844 };
+  const c = coverMap({ x: 0.5, y: 0.5 }, video, screen);
+  assert.ok(Math.abs(c.x - 195) < 1e-6 && Math.abs(c.y - 422) < 1e-6);
+  const left = coverMap({ x: 0.4, y: 0.5 }, video, screen);
+  assert.ok(left.x > 195, "mirrored: camera-left appears screen-right");
+});
+
+test("roaches emerging from a mouth start small and grow", () => {
+  const factory = new RoachFactory();
+  const r = factory.spawnFromMouth({ x: 200, y: 300, width: 60 }, { weights: { german: 1 }, speedMul: 1 });
+  assert.ok(r.entered);
+  assert.ok(r.renderScale < 0.5);
+  for (let i = 0; i < 40; i++) r.update(1 / 60, { width: 400, height: 800, threats: [] });
+  assert.equal(r.renderScale, 1);
+});
+
+// --- body shader ----------------------------------------------------------------
+test("body height field covers the body and is empty outside", () => {
+  assert.equal(bodyHeight(0, 0).id, "wings");
+  assert.equal(bodyHeight(0.25, 0).id, "pronotum");
+  assert.equal(bodyHeight(0.9, 0).h, 0);
+  assert.equal(bodyHeight(0, 0.6).h, 0);
+});
+
+test("shader output is opaque on the body, transparent outside, and lit from the light side", () => {
+  const w = 60;
+  const h = 30;
+  const shade = (lightAngle) => shadeBody({ width: w, height: h, L: 50, W: 22, colors: ROACH_TYPES.american.colors, lightAngle });
+  const px = shadeBody({ width: w, height: h, L: 50, W: 22, colors: ROACH_TYPES.american.colors, lightAngle: 0 });
+  assert.equal(px[3], 0, "corner is transparent");
+  assert.equal(px[(15 * w + 30) * 4 + 3], 255, "centre is opaque");
+  // Light from +y side brightens the +y flank more than the -y flank.
+  const lit = shade(Math.PI / 2);
+  const lum = (x, y) => lit[(y * w + x) * 4] + lit[(y * w + x) * 4 + 1] + lit[(y * w + x) * 4 + 2];
+  assert.ok(lum(28, 22) > lum(28, 8));
+});
+
+test("renderer light buckets wrap around", () => {
+  assert.equal(RoachRenderer.bucketOf(0), 0);
+  assert.equal(RoachRenderer.bucketOf(Math.PI * 2), 0);
+  assert.equal(RoachRenderer.bucketOf(-Math.PI / 8), 15);
 });
 
 // --- roach ---------------------------------------------------------------------
