@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#2b1a0e" />
+    <meta name="description" content="משחק מחיצת ג'וקים — עם עכבר, מגע או תנועת יד מול המצלמה" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>מחץ את הג'וק</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="stage">
+      <video id="bgVideo" playsinline muted hidden></video>
+      <canvas id="bg"></canvas>
+      <canvas id="game"></canvas>
+      <video id="handVideo" class="mirror" playsinline muted hidden></video>
+    </div>
+
+    <div id="hud" hidden>
+      <div class="stat"><small>שלב</small><b id="hud-level">1</b></div>
+      <div class="stat"><small>ניקוד</small><b id="hud-score">0</b></div>
+      <div class="stat"><small>זמן</small><b id="hud-time">30</b></div>
+      <div class="progress">
+        <div class="bar"><div id="hud-progress"></div></div>
+        <small id="hud-count">0/8</small>
+      </div>
+      <button id="pause-btn" aria-label="הפסקה">⏸</button>
+    </div>
+
+    <div id="overlay" hidden><div class="panel"></div></div>
+
+    <div id="settings" hidden>
+      <div class="panel">
+        <h2>הגדרות</h2>
+        <h3>רקע</h3>
+        <div id="bg-grid"></div>
+        <label class="upload">🖼️ העלאת תמונה משלך<input id="bg-upload" type="file" accept="image/*" /></label>
+
+        <h3>מצלמה</h3>
+        <div class="radio-row">
+          <label><input type="radio" name="camera" value="off" checked /> כבויה</label>
+          <label><input type="radio" name="camera" value="rear" /> 📷 אחורית — רקע חי</label>
+          <label><input type="radio" name="camera" value="front" /> 🤳 קדמית — מחיצה ביד</label>
+        </div>
+
+        <h3>צליל</h3>
+        <label class="switch"><input id="sound-toggle" type="checkbox" checked /> צלילים ורטט</label>
+
+        <div class="buttons"><button id="settings-close" class="primary">סגור</button></div>
+      </div>
+    </div>
+
+    <div id="status" hidden></div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
