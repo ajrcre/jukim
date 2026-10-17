@@ -1,9 +1,6 @@
-import { SPLASHES } from "./splashScenes.js";
+import { createSplashScene } from "./splashScene.js";
 
-// Which cartoon intro to use (chosen from the variants in splashScenes.js).
-export const SPLASH_ID = "slipper";
-
-/** Full-screen cartoon intro; resolves once the player taps. */
+/** Full-screen cartoon intro; calls onTap once the player taps. */
 export class Splash {
   constructor(root, svg) {
     this.root = root;
@@ -13,8 +10,7 @@ export class Splash {
 
   play(onTap) {
     this.root.hidden = false;
-    const def = SPLASHES.find((s) => s.id === SPLASH_ID) ?? SPLASHES[0];
-    this.scene = def.create(this.svg);
+    this.scene = createSplashScene(this.svg);
     const handler = () => {
       this.root.removeEventListener("pointerdown", handler);
       onTap();

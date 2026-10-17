@@ -160,26 +160,6 @@ body {
   display: block;
 }
 
-#splash .title {
-  font-weight: 900;
-  fill: var(--accent-2);
-  stroke: #5a2a10;
-  stroke-width: 6px;
-  paint-order: stroke;
-}
-
-#splash .tap {
-  fill: #fff;
-  font-size: 20px;
-  animation: blink 1.2s infinite alternate;
-}
-
-@keyframes blink {
-  from {
-    opacity: 0.35;
-  }
-}
-
 /* Lobby */
 .panel.lobby {
   width: min(520px, 100%);

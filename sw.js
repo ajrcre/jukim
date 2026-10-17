@@ -1,5 +1,5 @@
 // Service worker: precaches the game's own files for offline play; CDN/model requests are left alone.
-const CACHE = "jukim-v2";
+const CACHE = "jukim-v3";
 const ASSETS = [
   "./",
   "index.html",
@@ -32,7 +32,7 @@ const ASSETS = [
   "src/ui/UI.js",
   "src/ui/Lobby.js",
   "src/ui/Splash.js",
-  "src/ui/splashScenes.js",
+  "src/ui/splashScene.js",
   "assets/sounds/cartoon_scream.mp3",
   "assets/sounds/slipper_whack.mp3",
   "assets/sounds/squash1.mp3",
