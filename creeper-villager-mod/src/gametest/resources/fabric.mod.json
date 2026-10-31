@@ -1,0 +1,13 @@
+{
+	"schemaVersion": 1,
+	"id": "creeper_trader_gametest",
+	"version": "1.0.0",
+	"name": "Creeper Trader Game Tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": ["com.jukim.creepertrader.gametest.CreeperTraderGameTest"]
+	},
+	"depends": {
+		"creeper_trader": "*"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "creeper_trader",
+	"version": "${version}",
+	"name": "Creeper Trader",
+	"description": "A creeper dressed as a villager that trades TNT. Don't hit it.",
+	"authors": ["jukim"],
+	"license": "CC0-1.0",
+	"icon": "assets/creeper_trader/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["com.jukim.creepertrader.CreeperTrader"],
+		"client": ["com.jukim.creepertrader.client.CreeperTraderClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

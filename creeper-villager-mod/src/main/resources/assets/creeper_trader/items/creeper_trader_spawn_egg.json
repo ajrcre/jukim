@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "creeper_trader:item/creeper_trader_spawn_egg"
+  }
+}

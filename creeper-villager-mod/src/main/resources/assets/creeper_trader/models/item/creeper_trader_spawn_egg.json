@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "creeper_trader:item/creeper_trader_spawn_egg"
+  }
+}
