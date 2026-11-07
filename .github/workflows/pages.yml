@@ -42,7 +42,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          cp -r index.html styles.css manifest.webmanifest sw.js icons src assets _site/
+          cp -r index.html styles.css manifest.webmanifest sw.js icons src assets sipur _site/
       - uses: actions/upload-pages-artifact@v3
       - id: deployment
         uses: actions/deploy-pages@v4
